@@ -1,5 +1,7 @@
 class ProductPrice < ActiveRecord::Base
   belongs_to :product
+  validates_presence_of :stocking_distributor, :non_stocking_distributor, :managed_service_provider,
+                        :installer_partner, :list, :product_id
 
   def sd_price; to_currency(stocking_distributor) end
   def nsd_price; to_currency(non_stocking_distributor) end

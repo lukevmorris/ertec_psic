@@ -15,7 +15,7 @@ end
 describe Product, 'factory' do
   it 'is valid' do
     product = build(:product)
-    expect(product.save).to be_true
+    expect(product).to be_valid
   end
 end
 
@@ -23,7 +23,7 @@ describe Product, 'validations' do
   [ :name, :code, :uom, :part_number, :group_id, :category_id, :family_id ].each do |field|
     it "is invalid without a present #{field} value" do
       product = build(:product, field => nil)
-      expect(product.save).to be_false
+      expect(product).to_not be_valid
     end
   end
 end

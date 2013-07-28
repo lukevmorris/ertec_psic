@@ -14,3 +14,25 @@ describe ProductPrice, 'all instance price methods' do
     end
   end
 end
+
+describe ProductPrice, 'factory' do
+  it 'is valid' do
+    price = build(:product_price)
+    expect(price).to be_valid
+  end
+end
+
+describe ProductPrice, 'validations' do
+  [ :stocking_distributor,
+    :non_stocking_distributor,
+    :managed_service_provider,
+    :installer_partner,
+    :list,
+    :product_id,
+  ].each do |field|
+    it "is invalid without a present #{field} value" do
+      price = build(:product_price, field => nil)
+      expect(price).to_not be_valid
+    end
+  end
+end
