@@ -11,7 +11,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20130728182219) do
+ActiveRecord::Schema.define(version: 20130728184535) do
+
+  create_table "product_prices", force: true do |t|
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "stocking_distributor"
+    t.integer  "non_stocking_distributor"
+    t.integer  "managed_service_provider"
+    t.integer  "installer_partner"
+    t.integer  "list"
+    t.integer  "product_id"
+  end
 
   create_table "products", force: true do |t|
     t.datetime "created_at"
