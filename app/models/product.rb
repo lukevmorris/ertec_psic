@@ -1,6 +1,7 @@
 class Product < ActiveRecord::Base
   has_one :product_price
   delegate :sd_price, :nsd_price, :msp_price, :list_price, :ip_price, to: :product_price
+  validates_presence_of :name, :code, :uom, :part_number, :group_id, :category_id, :family_id
 
   GROUPS = [
     'Fencing',
