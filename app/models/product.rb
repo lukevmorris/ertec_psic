@@ -1,5 +1,6 @@
 class Product < ActiveRecord::Base
   has_one :product_price
+  delegate :sd_price, :nsd_price, :msp_price, :list_price, :ip_price, to: :product_price
 
   GROUPS = [
     'Fencing',
