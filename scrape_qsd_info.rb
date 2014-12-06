@@ -1,45 +1,39 @@
 require 'rubygems'
 require 'mechanize'
 require 'csv'
+require 'set'
+require_relative 'zip_codes'
 
 class Harvester
   attr_accessor :csv, :all_emails, :queue, :mutex
 
   def initialize(file)
     self.csv = CSV.open(file, 'a')
-    self.all_emails = []
-    self.queue = Queue.new
-    self.mutex = Mutex.new
+    self.all_emails = Set.new
+    # self.queue = Queue.new
+    # self.mutex = Mutex.new
   end
 
   def process_for_zips
     csv << %w( Email Last First Company Address City State Zip CertType CertNo Expiry Status )
-    zips_from_file.map{|zip| queue << zip}
+    # ZipCodes.from_file.each{|zip| queue << zip}
 
-    threads = []
-    6.times do
-      threads << Thread.new do
-        agent = Mechanize.new
-        agent.get('http://www.owp.csus.edu/qsd-lookup.php')
-        while (new_zip = queue.pop(true) rescue nil) do
-          process_for_zip(agent, new_zip)
-        end
-      end
+    # threads = []
+    # 6.times do
+    #   threads << Thread.new do
+    agent = Mechanize.new
+    agent.get('http://www.owp.csus.edu/qsd-lookup.php')
+    # while (new_zip = queue.pop(true) rescue nil) do
+    ZipCodes.from_file.each do |zip_code|
+      process_for_zip(agent, zip_code)
     end
-    threads.map(&:join)
+    # end
+    #   end
+    # end
+    # threads.map(&:join)
   end
 
 private
-  def zips_from_file
-    zips = []
-    File.open('./zip_codes.txt','r') do |f|
-      while zip = f.gets
-        zips << zip.chomp
-      end
-    end
-    zips
-  end
-
   def process_for_zip(agent, zip)
     data = data_for(agent, zip)
     mutex.synchronize do
@@ -93,7 +87,7 @@ private
 
   def company_for(entry, addresses)
     potential_company = entry.css('td:nth-child(2)').first.children[2].text
-    if addresses[0].include?(potential_company) 
+    if addresses[0].include?(potential_company)
       ""
     else
       potential_company.downcase.split(' ').map { |word|
