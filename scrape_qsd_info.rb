@@ -63,6 +63,12 @@ private
       @html_rows = html.css(".tropub, .tropubhold")
     end
 
+    def each_data_row
+      data_columns = [emails, full_names, addresses, cert_types, cert_numbers, expirys, statuses]
+      data_rows = data_columns.transpose.map(&:flatten)
+      data_rows.each
+    end
+
     def emails
       @emails ||= @html_rows.css("td:nth-child(2) a:first").map do |node|
         node.text.downcase
@@ -76,7 +82,27 @@ private
       end
     end
 
+    def cert_types
+      @cert_types ||= @html_rows.css("td:nth-child(3)").map(&:text)
+    end
 
+    def cert_numbers
+      @cert_numbers ||= @html_rows.css("td:nth-child(4)").map(&:text)
+    end
+
+    def expirys
+      @expirys ||= @html_rows.css("td:nth-child(5)").map(&:text)
+    end
+
+    def statuses
+      @statuses ||= @html_rows.css("td:last").map(&:text)
+    end
+
+    def full_names
+      @full_names ||= @html_rows.css("td:first").map do |node|
+        node.text.split(", ")
+      end
+    end
   end
 
   def process_entry(entry)
@@ -100,25 +126,5 @@ private
         word.capitalize unless %( and or the over to a but ).include?(word)
       }.join(' ')
     end
-  end
-
-  def fullname_for(entry)
-    entry.css('td:first').first.text.split(', ', 2)
-  end
-
-  def type_for(entry)
-    entry.css('td:nth-child(3)').first.text
-  end
-
-  def certno_for(entry)
-    entry.css('td:nth-child(4)').first.text
-  end
-
-  def expiry_for(entry)
-    entry.css('td:nth-child(5)').first.text
-  end
-
-  def status_for(entry)
-    entry.css('td:last').first.text
   end
 end
