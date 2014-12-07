@@ -1,6 +1,6 @@
 class ZipPage
   User = Struct.new(
-    :email, :last_name, :first_name, :address, :city,
+    :email, :last_name, :first_name, :company, :address, :city,
     :state, :zip, :cert_type, :cert_number, :expiry, :status
   )
 
@@ -18,7 +18,7 @@ class ZipPage
   end
 
   def each_user(&block)
-    data_columns = [emails, full_names, addresses, cert_types, cert_numbers, expirys, statuses]
+    data_columns = [emails, full_names, companies, addresses, cert_types, cert_numbers, expirys, statuses]
     data_columns.transpose.map do |user_data|
       yield User.new(*user_data.flatten)
     end
@@ -28,10 +28,19 @@ class ZipPage
     @html_rows.css("td:nth-child(2) a:first").map {|node| node.text.downcase }
   end
 
-  def addresses # [addr, city, state, zip]
-    @html_rows.css("td:nth-child(2) a:last").map do |node|
-      /q=(.*), (.*) (.*)  (.*)/.match(node["href"])[1..-1]
+  def full_names # [last, first]
+    @html_rows.css("td:first").map {|node| node.text.split(", ") }
+  end
+
+  def companies # company || ""
+    potential_companies = @html_rows.css("td:nth-child(2)").map {|node| node.children[2].text }
+    potential_companies.zip(address_queries).map do |company, address|
+      address[company] ? "" : company
     end
+  end
+
+  def addresses # [addr, city, state, zip]
+    address_queries.map {|query| /q=(.*), (.*) (.*)  (.*)/.match(query)[1..-1] }
   end
 
   def cert_types # cert_type
@@ -50,7 +59,7 @@ class ZipPage
     @html_rows.css("td:last").map(&:text)
   end
 
-  def full_names # [last, first]
-    @html_rows.css("td:first").map {|node| node.text.split(", ") }
+  def address_queries
+    @html_rows.css("td:nth-child(2) a:last").map {|node| node["href"] }
   end
 end
