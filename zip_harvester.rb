@@ -20,13 +20,19 @@ class ZipHarvester
   def harvest!
     agent = Mechanize.new
     agent.get(HOME_PAGE)
-    ZipCodes.each {|zip| record_data_for_zip(zip, agent) }
+    zip_count = ZipCodes.count
+    ZipCodes.each_with_index do |zip, index|
+      puts "Processing zip code #{zip} [#{index+1}/#{zip_count}]:"
+      size_before = @all_emails.size
+      record_data_for_zip(zip, agent)
+      size_after = @all_emails.size
+      puts " - #{size_after - size_before} new entries!"
+    end
   end
 
   def record_data_for_zip(zip, agent)
     ZipPage.for_zip(zip, agent).users.each do |user|
       @csv.puts(user) if @all_emails.add?(user.email)
     end
-    puts zip
   end
 end

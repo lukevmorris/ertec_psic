@@ -8,7 +8,13 @@ class ZipPage
     info_form = agent.page.forms.first
     info_form.zip_code = zip
     info_form.miles = 50
+
+    print " - Requesting page..."
+    request_start = Time.now
     info_form.submit
+    request_end = Time.now
+    puts "#{request_end - request_start} seconds"
+
     html = Nokogiri::HTML.parse(agent.page.body)
     self.new(html.css(".tropub, .tropubhold"), zip)
   end
@@ -23,7 +29,12 @@ class ZipPage
   end
 
   def users
+    print " - Parsing page..."
+    parse_start = Time.now
     data_columns = [emails, full_names, companies, addresses, cert_types, cert_numbers, expirys, statuses]
+    parse_end = Time.now
+    puts "#{parse_end - parse_start} seconds"
+
     data_columns.transpose.map do |user_data|
       User.new(*user_data.flatten)
     end
