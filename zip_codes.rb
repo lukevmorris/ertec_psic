@@ -5,8 +5,8 @@ class ZipCodes
   ZIP_STORE = "zip_codes.txt"
   ZIP_MASTER = "http://www.zipcodestogo.com/California/"
 
-  def self.from_file
-    File.readlines(ZIP_STORE).map(&:chomp)
+  def self.each
+    File.readlines(ZIP_STORE).each { |zip| yield zip.chomp }
   end
 
   def self.refresh_store

@@ -14,52 +14,19 @@ class ZipHarvester
   def initialize(file)
     @all_emails = Set.new
     @csv = CSV.open(file, "a")
-    @csv << STARTING_ROW
+    @csv.puts(STARTING_ROW)
   end
 
   def extract_data_from_zips
     agent = Mechanize.new
     agent.get(HOME_PAGE)
 
-    ZipCodes.from_file.each do |zip|
-      page = ZipPage.for_zip(zip, agent)
-      page.each_data_row do |row|
-        @csv.puts(row) if @all_emails.add?(row.email)
+    ZipCodes.each do |zip|
+      ZipPage.for_zip(zip, agent).each_user do |user|
+        @csv.puts(user) if @all_emails.add?(user.email)
       end
-      puts zip_code
+      puts zip
     end
-  end
-
-private
-  def process_for_zip(html)
-    data_for(html).map do |row|
-      email = row[0]
-      @csv.puts(row) if @all_emails.add?(email)
-    end
-  end
-
-  def data_for(html)
-    html.css('').map{|entry| process_entry(entry)}
-  end
-
-  def get_zip_page(agent, zip)
-    info_form = agent.page.forms.first
-    info_form.zip_code = zip
-    info_form.miles = 50
-    info_form.submit
-    Nokogiri::HTML.parse(agent.page.body)
-  end
-
-  def process_entry(entry)
-    email = email_for(entry)
-    addresses = addresses_for(entry)
-    company = company_for(entry, addresses)
-    fullname = fullname_for(entry)
-    type = type_for(entry)
-    certno = certno_for(entry)
-    expiry = expiry_for(entry)
-    status = status_for(entry)
-    [email, fullname, company, addresses, type, certno, expiry, status].flatten
   end
 
   def company_for(entry, addresses)
