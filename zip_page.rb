@@ -10,17 +10,22 @@ class ZipPage
     info_form.miles = 50
     info_form.submit
     html = Nokogiri::HTML.parse(agent.page.body)
-    self.new(html.css(".tropub, .tropubhold"))
+    self.new(html.css(".tropub, .tropubhold"), zip)
   end
 
-  def initialize(html_rows)
+  def initialize(html_rows, zip)
     @html_rows = html_rows
+    @zip = zip
   end
 
-  def each_user(&block)
+  def inspect
+    "<< Zip Page for zip code #{@zip} >>"
+  end
+
+  def users
     data_columns = [emails, full_names, companies, addresses, cert_types, cert_numbers, expirys, statuses]
     data_columns.transpose.map do |user_data|
-      yield User.new(*user_data.flatten)
+      User.new(*user_data.flatten)
     end
   end
 
@@ -29,7 +34,7 @@ class ZipPage
   end
 
   def full_names # [last, first]
-    @html_rows.css("td:first").map {|node| node.text.split(", ") }
+    @html_rows.css("td:first").map {|node| node.text.split(", ", 2) }
   end
 
   def companies # company || ""
