@@ -5,13 +5,15 @@ require 'set'
 require_relative 'zip_codes'
 
 class Harvester
-  attr_accessor :csv, :all_emails, :queue, :mutex
+  HOME_PAGE = "http://www.owp.csus.edu/qsd-lookup.php"
+  STARTING_ROW = %w(
+    Email Last First Company Address City State Zip CertType CertNo Expiry Status
+  )
 
   def initialize(file)
-    self.csv = CSV.open(file, 'a')
-    self.all_emails = Set.new
-    # self.queue = Queue.new
-    # self.mutex = Mutex.new
+    @all_emails = Set.new
+    @csv = CSV.open(file, "a")
+    @csv << STARTING_ROW
   end
 
   def process_for_zips
