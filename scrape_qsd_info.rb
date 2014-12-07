@@ -16,51 +16,67 @@ class Harvester
     @csv << STARTING_ROW
   end
 
-  def process_for_zips
-    csv << %w( Email Last First Company Address City State Zip CertType CertNo Expiry Status )
-    # ZipCodes.from_file.each{|zip| queue << zip}
-
-    # threads = []
-    # 6.times do
-    #   threads << Thread.new do
+  def extract_data_from_zips
     agent = Mechanize.new
-    agent.get('http://www.owp.csus.edu/qsd-lookup.php')
-    # while (new_zip = queue.pop(true) rescue nil) do
-    ZipCodes.from_file.each do |zip_code|
-      process_for_zip(agent, zip_code)
+    agent.get(HOME_PAGE)
+
+    ZipCodes.from_file.each do |zip|
+      page = ZipPage.for_zip(zip, agent)
+      page.each_data_row do |row|
+        @csv.puts(row) if @all_emails.add?(row.email)
+      end
+      puts zip_code
     end
-    # end
-    #   end
-    # end
-    # threads.map(&:join)
   end
 
 private
-  def process_for_zip(agent, zip)
-    data = data_for(agent, zip)
-    mutex.synchronize do
-      data.map do |row|
-        unless all_emails.include?(row[0])
-          all_emails << row[0]
-          csv << row
-        end
-      end
+  def process_for_zip(html)
+    data_for(html).map do |row|
+      email = row[0]
+      @csv.puts(row) if @all_emails.add?(email)
     end
-    puts zip
   end
 
-  def data_for(agent, zip)
-    html = retrieve_for_zip(agent, zip)
-    all_entries = html.css('.tropub, .tropubhold')
-    all_entries.map{|entry| process_entry(entry)}
+  def data_for(html)
+    html.css('').map{|entry| process_entry(entry)}
   end
 
-  def retrieve_for_zip(agent, zip)
+  def get_zip_page(agent, zip)
     info_form = agent.page.forms.first
     info_form.zip_code = zip
     info_form.miles = 50
     info_form.submit
     Nokogiri::HTML.parse(agent.page.body)
+  end
+
+  class ZipPage
+    def self.for_zip(zip, agent)
+      info_form = agent.page.forms.first
+      info_form.zip_code = zip
+      info_form.miles = 50
+      info_form.submit
+      html = Nokogiri::HTML.parse(page.body)
+      self.new(html)
+    end
+
+    def initialize(html)
+      @html_rows = html.css(".tropub, .tropubhold")
+    end
+
+    def emails
+      @emails ||= @html_rows.css("td:nth-child(2) a:first").map do |node|
+        node.text.downcase
+      end
+    end
+
+    def addresses
+      @addresses ||= @html_rows.css("td:nth-child(2) a:last").map do |node|
+        # [full, addr, city, state, zip]
+        /q=(.*), (.*) (.*)  (.*)/.match(node["href"])[1..-1]
+      end
+    end
+
+
   end
 
   def process_entry(entry)
@@ -73,18 +89,6 @@ private
     expiry = expiry_for(entry)
     status = status_for(entry)
     [email, fullname, company, addresses, type, certno, expiry, status].flatten
-  end
-
-  def email_for(entry)
-    entry.css('td:nth-child(2)').css('a:first').first.text.downcase
-  end
-
-  def addresses_for(entry)
-    full = entry.css('td:nth-child(2)').css('a:last').first['href'].match(/\?q=(.*)/)[1].reverse
-    zip, rest = full.split('  ',2)
-    state, rest = rest.split(' ',2)
-    city, addrs = rest.split(' ,',2)
-    [addrs, city, state, zip].map(&:reverse)
   end
 
   def company_for(entry, addresses)
