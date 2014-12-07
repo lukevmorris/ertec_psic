@@ -2,8 +2,8 @@ require 'rubygems'
 require 'mechanize'
 
 class ZipCodes
-  include Enumerable
-  
+  extend Enumerable
+
   ZIP_STORE = "zip_codes.txt"
   ZIP_MASTER = "http://www.zipcodestogo.com/California/"
 
