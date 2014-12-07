@@ -5,7 +5,7 @@ require 'set'
 require_relative 'zip_codes'
 require_relative 'zip_page'
 
-class Harvester
+class ZipHarvester
   HOME_PAGE = "http://www.owp.csus.edu/qsd-lookup.php"
   STARTING_ROW = %w(
     Email Last First Company Address City State Zip CertType CertNo Expiry Status
