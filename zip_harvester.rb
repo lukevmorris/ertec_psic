@@ -26,7 +26,7 @@ class ZipHarvester
       size_before = @all_emails.size
       record_data_for_zip(zip, agent)
       size_after = @all_emails.size
-      puts " - #{size_after - size_before} new entries!"
+      puts " - #{size_after - size_before} new entries! #{size_after} total."
     end
   end
 
